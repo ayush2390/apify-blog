@@ -1,10 +1,10 @@
 # Building a Netflix Web Show Recommender with Crawlee
 
-Scraping data from websites Netflix is not as easy as scraping data from any regular website. Netflix website heavily depends on JavaScript and it consists tons of elements. But Crawlee makes it super easy to scrape such complex websites.
+Scraping data from websites Netflix is not as easy as scraping data from any regular website. Netflix website heavily [depends on JavaScript](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9) and it consists tons of elements. Crawlee has the capability of scraping JS-heavy websites using its headless browsers, which we will discuss further
 
-[Crawlee](https://crawlee.dev/), a web scraping and browser automation library, helps us crawl websites, scrape data from them, and store the scraped data at the defined location.
+[Crawlee](https://crawlee.dev/) helps us crawl websites, scrape data from them, and store the scraped data at the defined location.
 
-Crawlee's features—autoscaling, proxy rotation, persistent URL queue, headless browser support, and Docker compatibility—make website scraping super easy.
+Crawlee's features—autoscaling, persistent URL queue, headless browser support —make website scraping super easy.
 
 In this blog, we will use Crawlee to scrape data from the Netflix website and use the scraped data to build a Netflix Web Show Recommender project.
 
@@ -22,15 +22,17 @@ To build the Web Show Recommender project, we will scrape data from the Netflix 
 
 ### Creating React app
 
-Firstly, we will create a React app using Vite. You can check out the [ReactJS Docs](https://react.dev/) to create a React app.
+Firstly, we will create a React app (for frontend) using Vite. You can check out the [ReactJS Docs](https://react.dev/) to create a React app.
 
 Once the React app is created, open it in VS Code.
 
-[img](assets/1.png)
+![react](assets/react.png)
 
 This will be the structure of your React app.
 
 Run `npm run dev` command in the terminal to run the app.
+
+![viteandreact](assets/viteandreact.png)
 
 This will be the output displayed by the React app.
 
@@ -50,11 +52,9 @@ We have to install two libraries - `crawlee` and `playwright`. Run this command 
 npm install crawlee playwright
 ```
 
-[Crawlee](https://crawlee.dev/) is a web scraping and browser automation library. It helps to build crawlers to scrape the data from websites.
+`playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
 
-[Playwright](https://github.com/microsoft/playwright) is a framework for Web Testing and Automation. It allows testing Chromium, Firefox, and WebKit with a single API. Created by Microsoft.
-
-Crawlee, built on Playwright, empowers headless browser scraping for complex websites. While slower and more resource-intensive, it tackles intricate JavaScript-heavy scenarios that basic crawlers can't handle.
+Crawlee, built on Playwright, empowers [headless browser scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#headless-browsing-and-js-rendering) for complex websites. While slower and more resource-intensive, it tackles intricate JavaScript-heavy scenarios that basic crawlers can't handle.
 
 After installing the libraries, it’s time to create the scraper code.
 
@@ -70,6 +70,8 @@ import { PlaywrightCrawler } from "crawlee";
 
 To scrape the genres, we will utilize the [browser Devtools](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/What_are_browser_developer_tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
 
+![genre](assets/genre.png)
+
 Here, we can observe that the name of the genre is captured by the _span_ tag having _nm-collections-row-name_ class. So we can use the _span.nm-collections-row-name_ selector to capture this and similar elements.
 
 ```js
@@ -84,6 +86,8 @@ This will give us the list of all the genres stored in _titles_ array.
 #### Scraping shows
 
 To scrape the show titles, we'll use the same method we used for scraping genres. Let’s find out the tag capturing the shows’ names.
+
+![title](assets/title.png)
 
 Here, we can observe that the title of the show is captured by the _span_ tag having _nm-collections-title-name_ class. So we can use the _span.nm-collections-title-name_ selector to capture this and similar elements.
 
@@ -115,12 +119,12 @@ Here, we have performed some basic operations on the _shows_ array to get the _t
 
 #### Storing data
 
-Now we have every data that we want for our project and it’s time to store or save the scraped data. To store the data, crawlee comes with a **crawlee.pushData** method.
+Now we have every data that we want for our project and it’s time to store or save the scraped data. To store the data, crawlee comes with a **pushData** method.
 
 The [pushData()](https://crawlee.dev/docs/introduction/saving-data) method creates a storage folder in the project directory and stores the scraped data in the json format.
 
 ```js
-await crawlee.pushData({
+await pushData({
   genre: titles,
   shows: totalShows,
 });
@@ -185,12 +189,12 @@ await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
 
 In this code snippet, we have defined the url that we want to scrape data from. You can scrape multiple urls also by adding the other urls in the array.
 
-Now we will run the crawlee to scrape the website. Before running the crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scrap.js` file to run the crawlee.
+Now we will run the crawlee to scrape the website. Before running the crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run the crawlee.
 
 Add the following code in `"scripts"` object:
 
 ```
-"start": "node src/scrap.js"
+"start": "node src/scraper.js"
 ```
 
 and save it. Now run this command to run the crawlee the scrape the data:
@@ -263,6 +267,8 @@ npm run dev
 ```
 
 This command will run your project on the localhost. Here is the demo of the project:
+
+![result](assets/result.gif)
 
 Project link - [https://github.com/ayush2390/web-show-recommender](https://github.com/ayush2390/web-show-recommender)
 
