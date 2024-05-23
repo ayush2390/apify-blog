@@ -4,13 +4,13 @@ Scraping data from websites Netflix is not as easy as scraping data from any reg
 
 Crawlee supports autoscaling, headless browser support, and efficient proxy management that helps make scraping easy.
 
-We will set up Crawlee and understand how it works. Let’s get started.
+We will set up Crawlee and understand it's working. Let’s get started!
 
 ## Prerequisites
 
 To use Crawlee, you need to have Node.js 16 or higher version.
 
-You can install the latest version of Nodejs from their [official website](https://nodejs.org/en/).
+You can install the latest version of Node.js from their [official website](https://nodejs.org/en/).
 
 ## Creating React app
 
@@ -58,11 +58,11 @@ import { PlaywrightCrawler } from "crawlee";
 
 ### Scraping genres
 
-To scrape the genres, we will utilize the [browser Devtools](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/What_are_browser_developer_tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
+To scrape the genres, we will utilize the [browser Devtools](https://developer.mozilla.org/en-US/docs/Learn/Common`questions/Tools`and`setup/What`are`browser`developer`tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
 
 ![genre](assets/genre.png)
 
-Here, we can observe that the name of the genre is captured by the _span_ tag having _nm-collections-row-name_ class. So we can use the _span.nm-collections-row-name_ selector to capture this and similar elements.
+Here, we can observe that the name of the genre is captured by the `span` tag having `nm-collections-row-name` class. So we can use the `span.nm-collections-row-name` selector to capture this and similar elements.
 
 ```js
 const titles = await page.$$eval("span.nm-collections-row-name", (elements) => {
@@ -71,7 +71,7 @@ const titles = await page.$$eval("span.nm-collections-row-name", (elements) => {
 });
 ```
 
-This will give us the list of all the genres stored in _titles_ array.
+This will give us the list of all the genres stored in `titles` array.
 
 ### Scraping shows
 
@@ -79,7 +79,7 @@ To scrape the show titles, we'll use the same method we used for scraping genres
 
 ![title](assets/title.png)
 
-Here, we can observe that the title of the show is captured by the _span_ tag having _nm-collections-title-name_ class. So we can use the _span.nm-collections-title-name_ selector to capture this and similar elements.
+Here, we can observe that the title of the show is captured by the `span` tag having `nm-collections-title-name` class. So we can use the `span.nm-collections-title-name` selector to capture this and similar elements.
 
 ```js
 const shows = await page.$$eval(
@@ -91,7 +91,7 @@ const shows = await page.$$eval(
 );
 ```
 
-This will scrape the title of all the shows and store it in the _shows_ array.
+This will scrape the title of all the shows and store it in the `shows` array.
 
 ```js
 let allShows = [];
@@ -105,7 +105,7 @@ shows.map((show) => {
 });
 ```
 
-Here, we have performed some basic operations on the _shows_ array to get the _totalShows_ array in the desired format.
+Here, we have performed some basic operations on the `shows` array to get the `totalShows` array in the desired format.
 
 ### Storing data
 
@@ -120,7 +120,7 @@ await pushData({
 });
 ```
 
-This will save the titles and totalShows arrays as values in the _genre_ and _shows_ keys.
+This will save the titles and totalShows arrays as values in the `genre` and `shows` keys.
 
 Here’s the code that we will use in our project:
 
