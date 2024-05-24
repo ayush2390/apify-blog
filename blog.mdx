@@ -1,8 +1,8 @@
 # Building a Netflix Web Show Recommender with Crawlee
 
-Scraping data from websites Netflix is not as easy as scraping data from any regular website. Netflix's website heavily [depends on JavaScript](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9), and it consists of tons of elements. Crawlee has the capability of scraping JS-heavy websites using its headless browsers, which we will discuss further in the article
+Scraping data from Netflix is not as easy as scraping data from any regular website. Netflix's website heavily [depends on JavaScript](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9) and consists of many elements. We will create an application to suggest Netflix web shows based on selected genres. Crawlee has the capability of scraping JS-heavy websites using its headless browsers, which we will discuss further in the article.
 
-Crawlee supports autoscaling, headless browser support, and efficient proxy management that helps make scraping easy.
+Crawlee supports autoscaling, headless browser support, and efficient proxy management that makes scraping easy.
 
 We will set up Crawlee and understand it's working. Let’s get started!
 
@@ -14,7 +14,13 @@ You can install the latest version of Node.js from their [official website](http
 
 ## Creating React app
 
-Firstly, we will create a React app (for frontend) using Vite. You can check out the [ReactJS Docs](https://react.dev/) to create a React app.
+Firstly, we will create a React app (for frontend) using Vite. Run this command in the terminal to create react app:
+
+```
+npx create-vite@latest
+```
+
+You can check out the [Vite Docs](https://vitejs.dev/guide/) to create a React app.
 
 Once the React app is created, open it in VS Code.
 
@@ -42,11 +48,13 @@ We will install two libraries - `crawlee` and `playwright`. Run this command to 
 npm install crawlee playwright
 ```
 
-`playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
+Note: `playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
 
 Crawlee, built on Playwright, empowers [headless browser scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#headless-browsing-and-js-rendering) for complex websites. While slower and more resource-intensive, it tackles intricate JavaScript-heavy scenarios that basic crawlers can't handle.
 
 After installing the libraries, it’s time to create the scraper code.
+
+Create a file in `src` directory and name it `scraper.js`. Whole scraper code will be created in this file.
 
 ### Importing libraries
 
@@ -197,7 +205,7 @@ After running this command, you will see a `storage` folder having `datasets\def
 
 Now we can use this json data and display it in the `App.jsx` component to create the project.
 
-In the `App.jsx` component, you can see we have imported `jsonData` from the `000000001.json` file:
+In the `App.jsx` component, we will import `jsonData` from the `000000001.json` file:
 
 ```js
 import jsonData from "../storage/datasets/default/000000001.json";
@@ -217,27 +225,45 @@ function App() {
   };
 
   return (
-    <>
-      <h1>Netflix Web Show recommender</h1>
-      <div>
-        <select onChange={handleChange}>
-          <option value="">Select your genre</option>;
+    <div className="app-container">
+      <h1 className="header">Netflix Web Show Recommender</h1>
+      <div className="genre-selector">
+        <select onChange={handleChange} className="select-genre">
+          <option value="">Select your genre</option>
           {jsonData.genre.map((genre, key) => {
-            return <option value={key}>{genre}</option>;
+            return (
+              <option key={key} value={key}>
+                {genre}
+              </option>
+            );
           })}
         </select>
       </div>
-      <div style={{ display: "flex" }} className="lists">
-        <div style={{ flex: "50%", paddingRight: "10px", textAlign: "left" }}>
-          {count &&
-            jsonData.shows[count].slice(0, 20).map((show) => <li>{show}</li>)}
-        </div>
-        <div style={{ flex: "50%", paddingLeft: "10px", textAlign: "left" }}>
-          {count &&
-            jsonData.shows[count].slice(20).map((show) => <li>{show}</li>)}
-        </div>
+      <div className="shows-container">
+        {count && (
+          <>
+            <div className="shows-list">
+              <ul>
+                {jsonData.shows[count].slice(0, 20).map((show, index) => (
+                  <li key={index} className="show-item">
+                    {show}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="shows-list">
+              <ul>
+                {jsonData.shows[count].slice(20).map((show, index) => (
+                  <li key={index} className="show-item">
+                    {show}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
