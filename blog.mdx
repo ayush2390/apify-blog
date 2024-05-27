@@ -1,4 +1,4 @@
-# Building a Netflix Web Show Recommender with Crawlee
+# Building a Netflix Web Show Recommender with Crawlee and React
 
 Scraping data from Netflix is not as easy as scraping data from any regular website. Netflix's website heavily [depends on JavaScript](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9) and consists of many elements. We will create an application to suggest Netflix web shows based on selected genres. Crawlee has the capability of scraping JS-heavy websites using its headless browsers, which we will discuss further in the article.
 
@@ -50,19 +50,11 @@ npm install crawlee playwright
 
 Note: `playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
 
-Crawlee, built on Playwright, empowers [headless browser scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#headless-browsing-and-js-rendering) for complex websites. While slower and more resource-intensive, it tackles intricate JavaScript-heavy scenarios that basic crawlers can't handle.
+Crawlee utilizes Playwright for [headless browser scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#headless-browsing-and-js-rendering) of JavaScript rendered websites. While slower and more resource-intensive, it can scrape websites that pure HTTP crawlers can't handle, such as SPAs (single page applications).
 
 After installing the libraries, it’s time to create the scraper code.
 
 Create a file in `src` directory and name it `scraper.js`. Whole scraper code will be created in this file.
-
-### Importing libraries
-
-`PlaywrightCrawler` class has been imported from the `crawlee` library. `PlaywrightCrawler` crawls the web using a headless browser controlled by the `Playwright` library.
-
-```js
-import { PlaywrightCrawler } from "crawlee";
-```
 
 ### Scraping genres
 
@@ -73,10 +65,11 @@ To scrape the genres, we will utilize the [browser Devtools](https://developer.m
 Here, we can observe that the name of the genre is captured by the `span` tag having `nm-collections-row-name` class. So we can use the `span.nm-collections-row-name` selector to capture this and similar elements.
 
 ```js
-const titles = await page.$$eval("span.nm-collections-row-name", (elements) => {
-  // Map the text content of each element
-  return elements.map((el) => el.textContent.trim());
-});
+// Use parseWithCheerio for efficient HTML parsing
+    const $ = await parseWithCheerio();
+
+// Extract genre titles
+    const titles = $(".nm-collections-row-name").map((_, el) => $(el).text().trim()).get();
 ```
 
 This will give us the list of all the genres stored in the `titles` array.
@@ -90,30 +83,29 @@ To scrape the titles of shows, we will use the same method we used for scraping 
 Here, we can observe that the title of the show is captured by the `span` tag having `nm-collections-title-name` class. So we can use the `span.nm-collections-title-name` selector to capture this and similar elements.
 
 ```js
-const shows = await page.$$eval(
-  "span.nm-collections-title-name",
-  (elements) => {
-    // Map the text content of each element
-    return elements.map((el) => el.textContent.trim());
-  }
-);
+// Extract show titles
+    const shows = $(".nm-collections-title-name").map((_, el) => $(el).text().trim()).get();
 ```
 
 This will scrape the title of all the shows and store it in the `shows` array.
 
 ```js
-let allShows = [];
-let totalShows = [];
-shows.map((show) => {
-  if (allShows.length == 40) {
-    totalShows.push(allShows);
-    allShows = [];
-  }
-  allShows.push(show);
-});
+// Prepare data for pushing
+    const allShows = [];
+    let chunk = [];
+    shows.forEach((show) => {
+      chunk.push(show);
+      if (chunk.length === 40) {
+        allShows.push(chunk);
+        chunk = [];
+      }
+    });
+    if (chunk.length > 0) {
+      allShows.push(chunk);
+    }
 ```
 
-Here, we have performed some basic operations on the `shows` array to get the `totalShows` array in the desired format.
+This code takes a large list of shows in `shows` and breaks them into groups of 40 in `chunk`, storing these groups in `allShows` array.
 
 ### Storing data
 
@@ -126,66 +118,59 @@ await pushData({
   genre: titles,
   shows: totalShows,
 });
-```
+```  
 
 This will save the `titles` and `totalShows` arrays as values in the `genre` and `shows` keys.
 
 Here’s the full code that we will use in our project:
 
 ```js
-import { PlaywrightCrawler } from "crawlee";
+import { PlaywrightCrawler, log } from "crawlee";
 
 const crawler = new PlaywrightCrawler({
-  requestHandler: async ({ page, request, enqueueLinks, pushData }) => {
-    console.log(`Processing: ${request.url}`);
+  requestHandler: async ({ request, parseWithCheerio, pushData }) => {
+    log.info(`Processing: ${request.url}`);
     console.log(request.label);
 
-    const titles = await page.$$eval(
-      "span.nm-collections-row-name",
-      (elements) => {
-        // Map the text content of each element
-        return elements.map((el) => el.textContent.trim());
-      }
-    );
-    // console.log(titles);
-    const shows = await page.$$eval(
-      "span.nm-collections-title-name",
-      (elements) => {
-        // Map the text content of each element
-        return elements.map((el) => el.textContent.trim());
-      }
-    );
+    // Use parseWithCheerio for efficient HTML parsing
+    const $ = await parseWithCheerio();
 
-    let allShows = [];
-    let totalShows = [];
-    shows.map((show) => {
-      if (allShows.length == 40) {
-        totalShows.push(allShows);
-        allShows = [];
+    // Extract genre titles
+    const titles = $(".nm-collections-row-name")
+      .map((_, el) => $(el).text().trim())
+      .get();
+
+    // Extract show titles
+    const shows = $(".nm-collections-title-name")
+      .map((_, el) => $(el).text().trim())
+      .get();
+
+    // Prepare data for pushing
+    const allShows = [];
+    let chunk = [];
+    shows.forEach((show) => {
+      chunk.push(show);
+      if (chunk.length === 40) {
+        allShows.push(chunk);
+        chunk = [];
       }
-      allShows.push(show);
     });
+    if (chunk.length > 0) {
+      allShows.push(chunk);
+    }
 
     await pushData({
       genre: titles,
-      shows: totalShows,
+      shows: allShows,
     });
   },
 
-  // Let's limit our crawls to make our tests shorter and safer.
+  // Limit crawls for efficiency
   maxRequestsPerCrawl: 20,
 });
 
 await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
 ```
-
-The `maxRequestPerCrawl` limits the crawlee to crawl only the first page of the given URL to make the tests shorter and safer. You can ignore this code line to crawl the entire website.
-
-```js
-await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
-```
-
-In this code snippet, we have defined the URL that we want to scrape data from. You can scrape multiple URLs also by adding the other URLs in the array.
 
 Now we will run the crawlee to scrape the website. Before running the crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run the crawlee.
 
