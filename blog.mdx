@@ -1,6 +1,8 @@
 # Building a Netflix Web Show Recommender with Crawlee and React
 
-Scraping data from Netflix is not as easy as scraping data from any regular website. Netflix's website heavily [depends on JavaScript](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9) and consists of many elements. We will create an application to suggest Netflix web shows based on selected genres. Crawlee has the capability of scraping JS-heavy websites using its headless browsers, which we will discuss further in the article.
+Creating a personalized web show recommender for Netflix involves overcoming the challenge of scraping data from a [JavaScript-heavy](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9) website. In this article, we'll guide you through the process of using Crawlee, capable of handling JS-heavy websites with its headless browsers. By the end of this guide, you'll have a functional web show recommender that can fetch and analyze Netflix data to provide tailored show suggestions. 
+
+Whether you're a developer looking to enhance your scraping skills or a Netflix enthusiast wanting to build a customized recommendation engine, this project has something valuable for you. Let's dive in and explore how Crawlee can help us achieve this.
 
 Crawlee supports autoscaling, headless browser support, and efficient proxy management that makes scraping easy.
 
@@ -48,7 +50,9 @@ We will install two libraries - `crawlee` and `playwright`. Run this command to 
 npm install crawlee playwright
 ```
 
-Note: `playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
+:::note
+`playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
+:::
 
 Crawlee utilizes Playwright for [headless browser scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#headless-browsing-and-js-rendering) of JavaScript rendered websites. While slower and more resource-intensive, it can scrape websites that pure HTTP crawlers can't handle, such as SPAs (single page applications).
 
@@ -125,7 +129,7 @@ This will save the `titles` and `totalShows` arrays as values in the `genre` and
 Here’s the full code that we will use in our project:
 
 ```js
-import { PlaywrightCrawler, log } from "crawlee";
+import { PlaywrightCrawler, log, Dataset } from "crawlee";
 
 const crawler = new PlaywrightCrawler({
   requestHandler: async ({ request, parseWithCheerio, pushData }) => {
@@ -159,7 +163,8 @@ const crawler = new PlaywrightCrawler({
       allShows.push(chunk);
     }
 
-    await pushData({
+    // await Dataset.pushData({ titles, allShows });
+    await Dataset.pushData({
       genre: titles,
       shows: allShows,
     });
@@ -170,6 +175,7 @@ const crawler = new PlaywrightCrawler({
 });
 
 await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
+await Dataset.exportToJSON("results");
 ```
 
 Now we will run the crawlee to scrape the website. Before running the crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run the crawlee.
@@ -201,13 +207,19 @@ Then we have used this `jsonData` and performed some `map` methods to get the de
 ```js
 import { useState } from "react";
 import "./App.css";
-import jsonData from "../storage/datasets/default/000000001.json";
+import jsonData from "../storage/key_value_stores/default/results.json";
 
 function App() {
-  const [count, setCount] = useState();
+  const [count, setCount] = useState(null);
+
   const handleChange = (event) => {
-    setCount(event.target.value);
+    const value = event.target.value;
+    setCount(value === "" ? null : parseInt(value));
   };
+
+  // Validate count to ensure it is within the bounds of the jsonData.shows array
+  const isValidCount =
+    count !== null && count >= 0 && count < jsonData[0].shows.length;
 
   return (
     <div className="app-container">
@@ -215,7 +227,7 @@ function App() {
       <div className="genre-selector">
         <select onChange={handleChange} className="select-genre">
           <option value="">Select your genre</option>
-          {jsonData.genre.map((genre, key) => {
+          {jsonData[0].genre.map((genre, key) => {
             return (
               <option key={key} value={key}>
                 {genre}
@@ -225,11 +237,11 @@ function App() {
         </select>
       </div>
       <div className="shows-container">
-        {count && (
+        {isValidCount && (
           <>
             <div className="shows-list">
               <ul>
-                {jsonData.shows[count].slice(0, 20).map((show, index) => (
+                {jsonData[0].shows[count].slice(0, 20).map((show, index) => (
                   <li key={index} className="show-item">
                     {show}
                   </li>
@@ -238,7 +250,7 @@ function App() {
             </div>
             <div className="shows-list">
               <ul>
-                {jsonData.shows[count].slice(20).map((show, index) => (
+                {jsonData[0].shows[count].slice(20).map((show, index) => (
                   <li key={index} className="show-item">
                     {show}
                   </li>
