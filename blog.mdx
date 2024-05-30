@@ -1,6 +1,6 @@
 # Building a Netflix Web Show Recommender with Crawlee and React
 
-Creating a personalized web show recommender for Netflix involves overcoming the challenge of scraping data from a [JavaScript-heavy](https://medium.com/dev-channel/a-netflix-web-performance-case-study-c0bcde26a9d9) website. In this article, we'll guide you through the process of using Crawlee, capable of handling JS-heavy websites with its headless browsers. By the end of this guide, you'll have a functional web show recommender that can fetch and analyze Netflix data to provide tailored show suggestions. 
+Creating a personalized web show recommender for Netflix involves scraping data from web pages efficiently. In this article, we'll guide you through the process of using Crawlee. By the end of this guide, you'll have a functional web show recommender that can fetch and analyze Netflix data to provide tailored show suggestions. 
 
 Whether you're a developer looking to enhance your scraping skills or a Netflix enthusiast wanting to build a customized recommendation engine, this project has something valuable for you. Let's dive in and explore how Crawlee can help us achieve this.
 
@@ -44,17 +44,17 @@ Let’s start building the scraper code.
 
 ### Installation
 
-We will install two libraries - `crawlee` and `playwright`. Run this command to install these libraries:
+We will install two libraries - `crawlee` and `cheerio`. Run this command to install these libraries:
 
 ```
-npm install crawlee playwright
+npm install crawlee cheerio
 ```
 
 :::note
-`playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
+`cheerio` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
 :::
 
-Crawlee utilizes Playwright for [headless browser scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#headless-browsing-and-js-rendering) of JavaScript rendered websites. While slower and more resource-intensive, it can scrape websites that pure HTTP crawlers can't handle, such as SPAs (single page applications).
+Crawlee utilizes Cheerio for [HTML parsing and scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#html-parsing-and-scraping) of static websites. While faster and less resource-intensive, it can only scrape websites that do not require JavaScript rendering, making it unsuitable for SPAs (single page applications).
 
 After installing the libraries, it’s time to create the scraper code.
 
@@ -118,10 +118,10 @@ Now we have every data that we want for our project and it’s time to store or 
 The [pushData()](https://crawlee.dev/docs/introduction/saving-data) method creates a storage folder in the project directory and stores the scraped data in the json format.
 
 ```js
-await pushData({
-  genre: titles,
-  shows: totalShows,
-});
+await Dataset.pushData({
+      genre: titles,
+      shows: allShows,
+    });
 ```  
 
 This will save the `titles` and `totalShows` arrays as values in the `genre` and `shows` keys.
@@ -129,12 +129,11 @@ This will save the `titles` and `totalShows` arrays as values in the `genre` and
 Here’s the full code that we will use in our project:
 
 ```js
-import { PlaywrightCrawler, log, Dataset } from "crawlee";
+import { CheerioCrawler, log, Dataset } from "crawlee";
 
-const crawler = new PlaywrightCrawler({
-  requestHandler: async ({ request, parseWithCheerio, pushData }) => {
+const crawler = new CheerioCrawler({
+  requestHandler: async ({ request, parseWithCheerio }) => {
     log.info(`Processing: ${request.url}`);
-    console.log(request.label);
 
     // Use parseWithCheerio for efficient HTML parsing
     const $ = await parseWithCheerio();
@@ -192,14 +191,14 @@ and save it. Now run this command to run the crawlee the scrape the data:
 npm start
 ```
 
-After running this command, you will see a `storage` folder having `datasets\default\000000001.json` file. In this json file, the scrapped data will be stored in json format.
+After running this command, you will see a `storage` folder having `key_value_stores/default/results.json` file. In this json file, the scrapped data will be stored in json format.
 
 Now we can use this json data and display it in the `App.jsx` component to create the project.
 
-In the `App.jsx` component, we will import `jsonData` from the `000000001.json` file:
+In the `App.jsx` component, we will import `jsonData` from the `results.json` file:
 
 ```js
-import jsonData from "../storage/datasets/default/000000001.json";
+import jsonData from "../storage/key_value_stores/default/results.json";
 ```
 
 Then we have used this `jsonData` and performed some `map` methods to get the desired results. Here is the full code of `App.jsx`:
