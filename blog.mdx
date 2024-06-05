@@ -162,8 +162,7 @@ const crawler = new CheerioCrawler({
       allShows.push(chunk);
     }
 
-    // await pushData({ titles, allShows });
-    await Dataset.pushData({
+    await pushData({
       genre: titles,
       shows: allShows,
     });
