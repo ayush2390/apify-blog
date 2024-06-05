@@ -1,8 +1,8 @@
 # Building a Netflix Web Show Recommender with Crawlee and React
 
-Creating a web show recommender for Netflix involves scraping data from web pages efficiently. In this article, we'll guide you through the process of using Crawlee. By the end of this guide, you'll have a functional web show recommender that can fetch and scrape Netflix data to provide tailored show suggestions. 
+Creating a web show recommender for Netflix involves scraping data from web pages efficiently. In this article, we'll guide you through the process of using Crawlee. By the end of this guide, you'll have a functional web show recommender that can fetch and scrape Netflix data to provide show suggestions. 
 
-Whether you're a developer looking to enhance your scraping skills or a Netflix enthusiast wanting to build a customized recommendation engine, this project has something valuable for you. Let's dive in and explore how Crawlee can help us achieve this.
+Whether you're a developer looking to enhance your scraping skills or a Netflix enthusiast wanting to build a web-show recommendation engine, this project has something valuable for you. Let's dive in and explore how Crawlee can help us achieve this.
 
 Crawlee supports autoscaling, headless browser support, and efficient proxy management that makes scraping easy.
 
@@ -54,7 +54,9 @@ npm install crawlee cheerio
 `cheerio` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
 :::
 
-Crawlee utilizes Cheerio for [HTML parsing and scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#html-parsing-and-scraping) of static websites. While faster and less resource-intensive, it can only scrape websites that do not require JavaScript rendering, making it unsuitable for SPAs (single page applications).
+Crawlee utilizes Cheerio for [HTML parsing and scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#html-parsing-and-scraping) of static websites. While faster and [less resource-intensive](https://crawlee.dev/docs/guides/scaling-crawlers), it can only scrape websites that do not require JavaScript rendering, making it unsuitable for SPAs (single page applications).
+
+Additionally, Crawlee comes with the support of [Playwright](https://playwright.dev/) and [Puppeteer](https://pptr.dev/) for websites that are JavaScript-heavy in nature. 
 
 After installing the libraries, it’s time to create the scraper code.
 
@@ -176,7 +178,7 @@ await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
 await Dataset.exportToJSON("results");
 ```
 
-Now we will run the crawlee to scrape the website. Before running the crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run the crawlee.
+Now, we will run Crawlee to scrape the website. Before running Crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run Crawlee.
 
 Add the following code in `"scripts"` object:
 
@@ -287,17 +289,6 @@ This command will run your project on the localhost. Here is the demo of the pro
 
 Project link - [https://github.com/ayush2390/web-show-recommender](https://github.com/ayush2390/web-show-recommender)
 
-In this way, you can scrape data from any website using crawlee and create some unique projects using the scraped data.
+In this project, we used Crawlee to scrape Netflix; similarly, Crawlee can be used to scrape Single Application Pages (SPAs) to JavaScript-heavy websites. The best part is all of this can be done while coding in JavaScript/TypeScript and using a single library.
 
-Want to know more about Crawlee? You can watch our Crawlee guide video:
-
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/g1Ll9OlFwEQ?si=EMeYil29LV0oDOxc"
-  title="YouTube video player"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  referrerpolicy="strict-origin-when-cross-origin"
-  allowfullscreen
-></iframe>
+If you want to learn more about Crawlee, I recommend going through their [documentation](https://crawlee.dev/docs/quick-start) and the [Crawlee web scraping tutorial by Apify](https://blog.apify.com/crawlee-web-scraping-tutorial/).
