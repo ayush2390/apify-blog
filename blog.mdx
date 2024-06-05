@@ -1,6 +1,6 @@
 # Building a Netflix Web Show Recommender with Crawlee and React
 
-Creating a personalized web show recommender for Netflix involves scraping data from web pages efficiently. In this article, we'll guide you through the process of using Crawlee. By the end of this guide, you'll have a functional web show recommender that can fetch and analyze Netflix data to provide tailored show suggestions. 
+Creating a web show recommender for Netflix involves scraping data from web pages efficiently. In this article, we'll guide you through the process of using Crawlee. By the end of this guide, you'll have a functional web show recommender that can fetch and scrape Netflix data to provide tailored show suggestions. 
 
 Whether you're a developer looking to enhance your scraping skills or a Netflix enthusiast wanting to build a customized recommendation engine, this project has something valuable for you. Let's dive in and explore how Crawlee can help us achieve this.
 
@@ -118,7 +118,7 @@ Now we have every data that we want for our project and it’s time to store or 
 The [pushData()](https://crawlee.dev/docs/introduction/saving-data) method creates a storage folder in the project directory and stores the scraped data in the json format.
 
 ```js
-await Dataset.pushData({
+await pushData({
       genre: titles,
       shows: allShows,
     });
@@ -132,7 +132,7 @@ Here’s the full code that we will use in our project:
 import { CheerioCrawler, log, Dataset } from "crawlee";
 
 const crawler = new CheerioCrawler({
-  requestHandler: async ({ request, parseWithCheerio }) => {
+  requestHandler: async ({ request, parseWithCheerio, pushData }) => {
     log.info(`Processing: ${request.url}`);
 
     // Use parseWithCheerio for efficient HTML parsing
@@ -162,7 +162,7 @@ const crawler = new CheerioCrawler({
       allShows.push(chunk);
     }
 
-    // await Dataset.pushData({ titles, allShows });
+    // await pushData({ titles, allShows });
     await Dataset.pushData({
       genre: titles,
       shows: allShows,
