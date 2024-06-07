@@ -1,12 +1,8 @@
 # Building a Netflix Web Show Recommender with Crawlee and React
 
-Creating a web show recommender for Netflix involves scraping data from web pages efficiently. In this article, we'll guide you through the process of using Crawlee. By the end of this guide, you'll have a functional web show recommender that can fetch and scrape Netflix data to provide show suggestions. 
+In this blog, we'll guide you through the process of using Vite and Crawlee to build a website that recommends Netflix shows based on their categories and genres. To do that, we will first scrape the shows and categories from Neflix using Crawlee, and then visualize scraped data in a React app built with Vite. By the end of this guide, you'll have a functional web show recommender that can provide Netflix show suggestions. 
 
-Whether you're a developer looking to enhance your scraping skills or a Netflix enthusiast wanting to build a web-show recommendation engine, this project has something valuable for you. Let's dive in and explore how Crawlee can help us achieve this.
-
-Crawlee supports autoscaling, headless browser support, and efficient proxy management that makes scraping easy.
-
-We will set up Crawlee and understand it's working. Let’s get started!
+Let’s get started!
 
 ## Prerequisites
 
@@ -47,16 +43,12 @@ Let’s start building the scraper code.
 We will install two libraries - `crawlee` and `cheerio`. Run this command to install these libraries:
 
 ```
-npm install crawlee cheerio
+npm install crawlee
 ```
-
-:::note
-`cheerio` is not bundled with Crawlee to reduce install size and allow greater flexibility. Therefore we need to install both libraries separately.
-:::
 
 Crawlee utilizes Cheerio for [HTML parsing and scraping](https://crawlee.dev/blog/scrapy-vs-crawlee#html-parsing-and-scraping) of static websites. While faster and [less resource-intensive](https://crawlee.dev/docs/guides/scaling-crawlers), it can only scrape websites that do not require JavaScript rendering, making it unsuitable for SPAs (single page applications).
 
-Additionally, Crawlee comes with the support of [Playwright](https://playwright.dev/) and [Puppeteer](https://pptr.dev/) for websites that are JavaScript-heavy in nature. 
+Additionally, Crawlee supports headless browser libraries like [Playwright](https://playwright.dev/) and [Puppeteer](https://pptr.dev/) for scraping of websites that are JavaScript-rendered. 
 
 After installing the libraries, it’s time to create the scraper code.
 
@@ -64,7 +56,7 @@ Create a file in `src` directory and name it `scraper.js`. Whole scraper code wi
 
 ### Scraping genres
 
-To scrape the genres, we will utilize the [browser Devtools](https://developer.mozilla.org/en-US/docs/Learn/Common`questions/Tools`and`setup/What`are`browser`developer`tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
+To scrape the genres, we will utilize the [browser DevTools](https://developer.mozilla.org/en-US/docs/Learn/Common`questions/Tools`and`setup/What`are`browser`developer`tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
 
 ![genre](assets/genre.png)
 
@@ -72,10 +64,9 @@ Here, we can observe that the name of the genre is captured by the `span` tag ha
 
 ```js
 // Use parseWithCheerio for efficient HTML parsing
-    const $ = await parseWithCheerio();
-
+const $ = await parseWithCheerio();
 // Extract genre titles
-    const titles = $(".nm-collections-row-name").map((_, el) => $(el).text().trim()).get();
+const titles = $(".nm-collections-row-name").map((_, el) => $(el).text().trim()).get();
 ```
 
 This will give us the list of all the genres stored in the `titles` array.
@@ -90,8 +81,7 @@ Here, we can observe that the title of the show is captured by the `span` tag ha
 
 ```js
 // Extract show titles
-    const shows = $(".nm-collections-title-name").map((_, el) => $(el).text().trim()).get();
-```
+const shows = $(".nm-collections-title-name").map((_, el) => $(el).text().trim()).get();
 
 This will scrape the title of all the shows and store it in the `shows` array.
 
@@ -131,7 +121,7 @@ This will save the `titles` and `totalShows` arrays as values in the `genre` and
 Here’s the full code that we will use in our project:
 
 ```js
-import { CheerioCrawler, log, Dataset } from "crawlee";
+import { CheerioCrawler, log, Dataset } from 'crawlee';
 
 const crawler = new CheerioCrawler({
   requestHandler: async ({ request, parseWithCheerio, pushData }) => {
@@ -141,12 +131,12 @@ const crawler = new CheerioCrawler({
     const $ = await parseWithCheerio();
 
     // Extract genre titles
-    const titles = $(".nm-collections-row-name")
+    const titles = $('.nm-collections-row-name')
       .map((_, el) => $(el).text().trim())
       .get();
 
     // Extract show titles
-    const shows = $(".nm-collections-title-name")
+    const shows = $('.nm-collections-title-name')
       .map((_, el) => $(el).text().trim())
       .get();
 
@@ -174,21 +164,21 @@ const crawler = new CheerioCrawler({
   maxRequestsPerCrawl: 20,
 });
 
-await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
-await Dataset.exportToJSON("results");
+await crawler.run(['https://www.netflix.com/in/browse/genre/1191605']);
+await Dataset.exportToJSON('results');
 ```
 
 Now, we will run Crawlee to scrape the website. Before running Crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run Crawlee.
 
-Add the following code in `"scripts"` object:
+Add the following code in `'scripts'` object:
 
 ```
-"start": "node src/scraper.js"
+'start': 'node src/scraper.js'
 ```
 
 and save it. Now run this command to run the crawlee the scrape the data:
 
-```
+```sh
 npm start
 ```
 
@@ -199,34 +189,33 @@ Now we can use this json data and display it in the `App.jsx` component to creat
 In the `App.jsx` component, we will import `jsonData` from the `results.json` file:
 
 ```js
-import jsonData from "../storage/key_value_stores/default/results.json";
+import jsonData from '../storage/key_value_stores/default/results.json';
 ```
 
 Then we have used this `jsonData` and performed some `map` methods to get the desired results. Here is the full code of `App.jsx`:
 
 ```js
-import { useState } from "react";
-import "./App.css";
-import jsonData from "../storage/key_value_stores/default/results.json";
+import { useState } from 'react';
+import './App.css';
+import jsonData from '../storage/key_value_stores/default/results.json';
 
 function App() {
   const [count, setCount] = useState(null);
 
   const handleChange = (event) => {
     const value = event.target.value;
-    setCount(value === "" ? null : parseInt(value));
+    if (value) setCount(parseInt(value);
   };
 
   // Validate count to ensure it is within the bounds of the jsonData.shows array
-  const isValidCount =
-    count !== null && count >= 0 && count < jsonData[0].shows.length;
+ const isValidCount = count && count <= jsonData[0].shows.length;
 
   return (
-    <div className="app-container">
-      <h1 className="header">Netflix Web Show Recommender</h1>
-      <div className="genre-selector">
-        <select onChange={handleChange} className="select-genre">
-          <option value="">Select your genre</option>
+    <div className='app-container'>
+      <h1 className='header'>Netflix Web Show Recommender</h1>
+      <div className='genre-selector'>
+        <select onChange={handleChange} className='select-genre'>
+          <option value=''>Select your genre</option>
           {jsonData[0].genre.map((genre, key) => {
             return (
               <option key={key} value={key}>
@@ -236,22 +225,22 @@ function App() {
           })}
         </select>
       </div>
-      <div className="shows-container">
+      <div className='shows-container'>
         {isValidCount && (
           <>
-            <div className="shows-list">
+            <div className='shows-list'>
               <ul>
                 {jsonData[0].shows[count].slice(0, 20).map((show, index) => (
-                  <li key={index} className="show-item">
+                  <li key={index} className='show-item'>
                     {show}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="shows-list">
+            <div className='shows-list'>
               <ul>
                 {jsonData[0].shows[count].slice(20).map((show, index) => (
-                  <li key={index} className="show-item">
+                  <li key={index} className='show-item'>
                     {show}
                   </li>
                 ))}
@@ -289,6 +278,6 @@ This command will run your project on the localhost. Here is the demo of the pro
 
 Project link - [https://github.com/ayush2390/web-show-recommender](https://github.com/ayush2390/web-show-recommender)
 
-In this project, we used Crawlee to scrape Netflix; similarly, Crawlee can be used to scrape Single Application Pages (SPAs) to JavaScript-heavy websites. The best part is all of this can be done while coding in JavaScript/TypeScript and using a single library.
+In this project, we used Crawlee to scrape Netflix; similarly, Crawlee can be used to scrape Single Application Pages (SPAs) and JavaScript-rendered websites. The best part is all of this can be done while coding in JavaScript/TypeScript and using a single library.
 
-If you want to learn more about Crawlee, I recommend going through their [documentation](https://crawlee.dev/docs/quick-start) and the [Crawlee web scraping tutorial by Apify](https://blog.apify.com/crawlee-web-scraping-tutorial/).
+If you want to learn more about Crawlee, I recommend going through the [documentation](https://crawlee.dev/docs/quick-start) and the [Crawlee web scraping tutorial by Apify](https://blog.apify.com/crawlee-web-scraping-tutorial/).
