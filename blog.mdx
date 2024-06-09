@@ -85,23 +85,25 @@ const shows = $(".nm-collections-title-name").map((_, el) => $(el).text().trim()
 
 This will scrape the title of all the shows and store it in the `shows` array.
 
+Since the Netflix page we scraped has exactly 40 shows for each genre, we will create arrays of 40 shows.
+
 ```js
 // Prepare data for pushing
-    const allShows = [];
-    let chunk = [];
-    shows.forEach((show) => {
-      chunk.push(show);
-      if (chunk.length === 40) {
-        allShows.push(chunk);
-        chunk = [];
-      }
-    });
-    if (chunk.length > 0) {
-      allShows.push(chunk);
+const allShows = [];
+let genreShows = [];
+shows.forEach((show) => {
+    genreShows.push(show);
+    if (genreShows.length === 40) {
+    allShows.push(genreShows);
+    genreShows = [];
     }
+});
+if (genreShows.length > 0) {
+    allShows.push(genreShows);
+}
 ```
 
-This code takes a large list of shows in `shows` and breaks them into groups of 40 in `chunk`, storing these groups in `allShows` array.
+This code takes a large list of shows in `shows` and breaks them into groups of 40 in `genreShows`, storing these groups in `allShows` array.
 
 ### Storing data
 
@@ -142,16 +144,16 @@ const crawler = new CheerioCrawler({
 
     // Prepare data for pushing
     const allShows = [];
-    let chunk = [];
+    let genreShows = [];
     shows.forEach((show) => {
-      chunk.push(show);
-      if (chunk.length === 40) {
-        allShows.push(chunk);
-        chunk = [];
+      genreShows.push(show);
+      if (genreShows.length === 40) {
+        allShows.push(genreShows);
+        genreShows = [];
       }
     });
-    if (chunk.length > 0) {
-      allShows.push(chunk);
+    if (genreShows.length > 0) {
+      allShows.push(genreShows);
     }
 
     await pushData({
@@ -161,7 +163,7 @@ const crawler = new CheerioCrawler({
   },
 
   // Limit crawls for efficiency
-  maxRequestsPerCrawl: 20,
+  // maxRequestsPerCrawl: 20,
 });
 
 await crawler.run(['https://www.netflix.com/in/browse/genre/1191605']);
