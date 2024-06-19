@@ -54,56 +54,45 @@ After installing the libraries, it’s time to create the scraper code.
 
 Create a file in `src` directory and name it `scraper.js`. Whole scraper code will be created in this file.
 
-### Scraping genres
+### Scraping genres and shows
 
-To scrape the genres, we will utilize the [browser DevTools](https://developer.mozilla.org/en-US/docs/Learn/Common`questions/Tools`and`setup/What`are`browser`developer`tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
+To scrape the genres and shows, we will utilize the [browser DevTools](https://developer.mozilla.org/en-US/docs/Learn/Common`questions/Tools`and`setup/What`are`browser`developer`tools) to identify the tags and CSS selectors targeting the genre elements on the Netflix website.
+
+We can capture the HTML structure and call `$(element)` to query the element's subtree.
 
 ![genre](assets/genre.png)
 
 Here, we can observe that the name of the genre is captured by the `span` tag having `nm-collections-row-name` class. So we can use the `span.nm-collections-row-name` selector to capture this and similar elements.
 
-```js
-// Use parseWithCheerio for efficient HTML parsing
-const $ = await parseWithCheerio();
-// Extract genre titles
-const titles = $(".nm-collections-row-name").map((_, el) => $(el).text().trim()).get();
-```
-
-This will give us the list of all the genres stored in the `titles` array.
-
-### Scraping shows
-
-To scrape the titles of shows, we will use the same method we used for scraping genres. Let’s find out the tag capturing the shows’ names.
-
 ![title](assets/title.png)
 
-Here, we can observe that the title of the show is captured by the `span` tag having `nm-collections-title-name` class. So we can use the `span.nm-collections-title-name` selector to capture this and similar elements.
+Similarly, we can observe that the title of the show is captured by the `span` tag having `nm-collections-title-name` class. So we can use the `span.nm-collections-title-name` selector to capture this and similar elements.
 
 ```js
-// Extract show titles
-const shows = $(".nm-collections-title-name").map((_, el) => $(el).text().trim()).get();
+// Use parseWithCheerio for efficient HTML parsing
+    const $ = await parseWithCheerio();
 
-This will scrape the title of all the shows and store it in the `shows` array.
+    // Extract genre and shows directly from the HTML structure
+    const data = $('[data-uia="collections-row"]')
+      .map((_, el) => {
+        const genre = $(el)
+          .find('[data-uia="collections-row-title"]')
+          .text()
+          .trim();
+        const items = $(el)
+          .find('[data-uia="collections-title"]')
+          .map((_, itemEl) => $(itemEl).text().trim())
+          .get();
+        return { genre, items };
+      })
+      .get();
 
-Since the Netflix page we scraped has exactly 40 shows for each genre, we will create arrays of 40 shows.
-
-```js
-// Prepare data for pushing
-const allShows = [];
-let genreShows = [];
-shows.forEach((show) => {
-    genreShows.push(show);
-    if (genreShows.length === 40) {
-    allShows.push(genreShows);
-    genreShows = [];
-    }
-});
-if (genreShows.length > 0) {
-    allShows.push(genreShows);
-}
+    // Prepare data for pushing
+    const genres = data.map((d) => d.genre);
+    const shows = data.map((d) => d.items);
 ```
 
-This code takes a large list of shows in `shows` and breaks them into groups of 40 in `genreShows`, storing these groups in `allShows` array.
+This will give the `genres` and `shows` array having list of genres and shows stored in it respectively.
 
 ### Storing data
 
@@ -113,17 +102,17 @@ The [pushData()](https://crawlee.dev/docs/introduction/saving-data) method creat
 
 ```js
 await pushData({
-      genre: titles,
-      shows: allShows,
+      genre: genres,
+      shows: shows,
     });
 ```  
 
-This will save the `titles` and `totalShows` arrays as values in the `genre` and `shows` keys.
+This will save the `genres` and `shows` arrays as values in the `genre` and `shows` keys.
 
 Here’s the full code that we will use in our project:
 
 ```js
-import { CheerioCrawler, log, Dataset } from 'crawlee';
+import { CheerioCrawler, log, Dataset } from "crawlee";
 
 const crawler = new CheerioCrawler({
   requestHandler: async ({ request, parseWithCheerio, pushData }) => {
@@ -132,33 +121,28 @@ const crawler = new CheerioCrawler({
     // Use parseWithCheerio for efficient HTML parsing
     const $ = await parseWithCheerio();
 
-    // Extract genre titles
-    const titles = $('.nm-collections-row-name')
-      .map((_, el) => $(el).text().trim())
-      .get();
-
-    // Extract show titles
-    const shows = $('.nm-collections-title-name')
-      .map((_, el) => $(el).text().trim())
+    // Extract genre and shows directly from the HTML structure
+    const data = $('[data-uia="collections-row"]')
+      .map((_, el) => {
+        const genre = $(el)
+          .find('[data-uia="collections-row-title"]')
+          .text()
+          .trim();
+        const items = $(el)
+          .find('[data-uia="collections-title"]')
+          .map((_, itemEl) => $(itemEl).text().trim())
+          .get();
+        return { genre, items };
+      })
       .get();
 
     // Prepare data for pushing
-    const allShows = [];
-    let genreShows = [];
-    shows.forEach((show) => {
-      genreShows.push(show);
-      if (genreShows.length === 40) {
-        allShows.push(genreShows);
-        genreShows = [];
-      }
-    });
-    if (genreShows.length > 0) {
-      allShows.push(genreShows);
-    }
+    const genres = data.map((d) => d.genre);
+    const shows = data.map((d) => d.items);
 
     await pushData({
-      genre: titles,
-      shows: allShows,
+      genre: genres,
+      shows: shows,
     });
   },
 
@@ -166,8 +150,8 @@ const crawler = new CheerioCrawler({
   // maxRequestsPerCrawl: 20,
 });
 
-await crawler.run(['https://www.netflix.com/in/browse/genre/1191605']);
-await Dataset.exportToJSON('results');
+await crawler.run(["https://www.netflix.com/in/browse/genre/1191605"]);
+await Dataset.exportToJSON("results");
 ```
 
 Now, we will run Crawlee to scrape the website. Before running Crawlee, we need to tweak the `package.json` file. We will add the `start` script targeting the `scraper.js` file to run Crawlee.
